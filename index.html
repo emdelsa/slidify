@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wine Quality Prediction</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Wine Quality Prediction">
+  <meta name="author" content="Emilio Delgado">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="./assets/css/ribbons.css"></link>
+
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>Wine Quality Prediction</h1>
+    <h2>Developing Data Products Course Project</h2>
+    <p>Emilio Delgado<br/></p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <article data-timings="">
+    <style>
+em {
+  font-style: italic
+}
+</style>
+
+<h2>The Dataset</h2>
+
+<p><img src="assets/img/logoUCI.gif" alt="logoUCI"></p>
+
+<p>The data for this project comes from the Wine Quality Data Set at the UCI Machine Learning Repository. There are two datasets, corresponding to red and white variants of the Portuguese &quot;Vinho Verde&quot; wine.</p>
+
+<p>Credit:
+P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis. 
+<em>Modeling wine preferences by data mining from physicochemical properties</em>. 
+In <em>Decision Support Systems</em>, Elsevier, 47(4):547-553, 2009.</p>
+
+<p>Data is loaded with the following commands:</p>
+
+<pre><code class="r">url&lt;- &quot;http://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/&quot;
+dataWhite &lt;- read.csv(paste(url,&quot;winequality-white.csv&quot;,sep=&quot;&quot;),sep=&quot;;&quot;)
+dataRed &lt;- read.csv(paste(url,&quot;winequality-red.csv&quot;,sep=&quot;&quot;),sep=&quot;;&quot;)
+</code></pre>
+
+<p>Libraries needed for the analysis: caret</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-2" style="background:;">
+  <hgroup>
+    <h2>Data attributes</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">names(dataWhite)
+</code></pre>
+
+<pre><code>##  [1] &quot;fixed.acidity&quot;        &quot;volatile.acidity&quot;     &quot;citric.acid&quot;         
+##  [4] &quot;residual.sugar&quot;       &quot;chlorides&quot;            &quot;free.sulfur.dioxide&quot; 
+##  [7] &quot;total.sulfur.dioxide&quot; &quot;density&quot;              &quot;pH&quot;                  
+## [10] &quot;sulphates&quot;            &quot;alcohol&quot;              &quot;quality&quot;
+</code></pre>
+
+<p>In both datasets, the output label is &quot;quality&quot;, the rest of the variables are predictors. After some analysis, We have selected two predictors: volatile.acidity and alcohol. The &quot;quality&quot; variable is an integer, ordered quantity representing the wine quality degree which has been compressed into two categories: GOOD for quality&gt;5 and REGULAR/BAD for the rest:</p>
+
+<pre><code class="r">dataWhite$q &lt;- as.factor(dataWhite$quality&gt;5)
+dataRed$q &lt;- as.factor(dataRed$quality&gt;5)
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-3" style="background:;">
+  <hgroup>
+    <h2>Data Partition &amp; Model Learning</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>We now create the training and testing data sets:</p>
+
+<pre><code class="r">intrainW&lt;-createDataPartition(dataWhite$q,p=0.7,list=FALSE)
+trainW &lt;- dataWhite[intrainW,]; testW &lt;- dataWhite[-intrainW,]
+intrainR&lt;-createDataPartition(dataRed$q,p=0.7,list=FALSE)
+trainR &lt;- dataRed[intrainR,] ; testR &lt;- dataRed[-intrainR,]
+</code></pre>
+
+<p>We will use logistic regression for our two models (one per wine variety):</p>
+
+<pre><code class="r">modelW &lt;- train(q~volatile.acidity+alcohol,data=trainW,method=&quot;glm&quot;,family=binomial)
+predW &lt;- predict(modelW,newdata=testW) ; confW &lt;- confusionMatrix(predW,testW$q)
+modelR &lt;- train(q~volatile.acidity+alcohol,data=trainR,method=&quot;glm&quot;,family=binomial)
+predR &lt;- predict(modelR,newdata=testR) ; confR &lt;- confusionMatrix(predR,testR$q)
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-4" style="background:;">
+  <hgroup>
+    <h2>The Model</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>Expected accuracy:</p>
+
+<pre><code class="r">confW$overall[1]
+</code></pre>
+
+<pre><code>##  Accuracy 
+## 0.7440436
+</code></pre>
+
+<pre><code class="r">confR$overall[1]
+</code></pre>
+
+<pre><code>##  Accuracy 
+## 0.7202505
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title=''>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='Data attributes'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='Data Partition &amp; Model Learning'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='The Model'>
+         4
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>
